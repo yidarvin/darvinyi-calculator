@@ -26,6 +26,8 @@ export type State = {
   tokens: number;
   waterLiters: number;
   surgeMultiplier: number;
+  surgeCalcs: number;
+  premiumTriggerCount: number;
   debt: { principal: number; startedAt: number } | null;
   plan: "pro" | "max" | "enterprise" | null;
   flags: {
@@ -43,6 +45,9 @@ type Actions = {
   advance: (s: Stage) => void;
   addCredits: (n: number) => void;
   spendCredits: (n: number) => void;
+  setSurge: (n: number) => void;
+  incrementSurgeCalcs: () => void;
+  addPremiumTriggers: (n: number) => void;
   setDebt: (principal: number) => void;
   setPlan: (p: "pro" | "max" | "enterprise") => void;
   recordCardAttempt: (a: Omit<CardAttempt, "ts">) => void;
@@ -58,6 +63,8 @@ const initialState: State = {
   tokens: 0,
   waterLiters: 0,
   surgeMultiplier: 1.0,
+  surgeCalcs: 0,
+  premiumTriggerCount: 0,
   debt: null,
   plan: null,
   flags: {
@@ -79,12 +86,31 @@ export const useStore = create<State & Actions>()(
       bumpInteractions: () =>
         set((s) => ({ interactions: s.interactions + 1 })),
 
-      advance: (stage) => set({ stage }),
+      advance: (stage) =>
+        set((s) => {
+          const patch: Partial<State> = { stage };
+          if (stage === "surge") {
+            patch.credits = 100;
+            patch.surgeCalcs = 0;
+          }
+          if (stage === "premium") {
+            patch.premiumTriggerCount = 0;
+          }
+          return patch;
+        }),
 
       addCredits: (n) => set((s) => ({ credits: s.credits + n })),
 
       spendCredits: (n) =>
         set((s) => ({ credits: Math.max(0, s.credits - n) })),
+
+      setSurge: (n) => set({ surgeMultiplier: n }),
+
+      incrementSurgeCalcs: () =>
+        set((s) => ({ surgeCalcs: s.surgeCalcs + 1 })),
+
+      addPremiumTriggers: (n) =>
+        set((s) => ({ premiumTriggerCount: s.premiumTriggerCount + n })),
 
       setDebt: (principal) =>
         set({ debt: { principal, startedAt: Date.now() } }),

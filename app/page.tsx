@@ -2,6 +2,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalcPad } from '@/components/calculator/CalcPad';
+import SurgeBanner from '@/components/chrome/SurgeBanner';
+import CreditBalance from '@/components/chrome/CreditBalance';
 import { useStore } from '@/lib/state';
 
 export default function Home() {
@@ -15,13 +17,17 @@ export default function Home() {
   if (stage === 'paywall') return null;
 
   return (
-    <main className="min-h-dvh flex flex-col items-center justify-center p-6">
-      <header className="mb-8 text-center">
-        <h1 className="font-sans text-2xl font-medium tracking-tight text-ink">
-          Calculator 2026
-        </h1>
-      </header>
-      <CalcPad />
-    </main>
+    <div className="min-h-dvh flex flex-col">
+      <SurgeBanner />
+      <main className="flex-1 flex flex-col items-center justify-center p-6">
+        <header className="mb-8 text-center flex items-center gap-4">
+          <h1 className="font-sans text-2xl font-medium tracking-tight text-ink">
+            Calculator 2026
+          </h1>
+          <CreditBalance />
+        </header>
+        <CalcPad />
+      </main>
+    </div>
   );
 }

@@ -1,12 +1,17 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { clsx } from 'clsx';
 import { initial, press, type CalcState } from './evaluator';
 import { useStore } from '@/lib/state';
+import { evaluateTriggers } from '@/lib/triggers';
 import { Display } from './Display';
 import { FreeTrialBanner } from './FreeTrialBanner';
+import { CostToast, type CostToastData } from '@/components/overlays/CostToast';
+import { CooldownModal } from '@/components/overlays/CooldownModal';
+import { BuyCredits } from '@/components/overlays/BuyCredits';
+import { BigSpenderUpsell } from '@/components/overlays/BigSpenderUpsell';
 
 type LastUseData = { a: number; op: string; b: number };
 
@@ -46,6 +51,7 @@ const ROWS: KeyDef[][] = [
 
 const FN_KEYS = new Set(['AC', '±', '%']);
 const OP_KEYS = new Set(['÷', '×', '−', '+', '=']);
+const SURGE_STAGES = new Set(['surge', 'premium', 'ads']);
 
 function keyClass(key: string, wide?: boolean) {
   const isFn = FN_KEYS.has(key);
@@ -61,11 +67,33 @@ function keyClass(key: string, wide?: boolean) {
   );
 }
 
+const BASE_COST = 10;
+const COOLDOWN_MS = 47_000;
+const RAPID_WINDOW_MS = 10_000;
+const RAPID_THRESHOLD = 3;
+
 export function CalcPad() {
   const router = useRouter();
   const [calc, setCalc] = useState<CalcState>(initial);
   const [lastUseModal, setLastUseModal] = useState<LastUseData | null>(null);
-  const { bumpUses, bumpInteractions, uses, stage, advance } = useStore();
+
+  // Surge/credit state
+  const [recentCalcs, setRecentCalcs] = useState<number[]>([]);
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [showCooldown, setShowCooldown] = useState(false);
+  const [toastData, setToastData] = useState<CostToastData | null>(null);
+  const [toastKey, setToastKey] = useState(0);
+  const [showBuyCredits, setShowBuyCredits] = useState(false);
+  const [showBigSpender, setShowBigSpender] = useState(false);
+  const [bigSpenderCost, setBigSpenderCost] = useState(0);
+
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const {
+    bumpUses, bumpInteractions, uses, stage, advance,
+    credits, surgeMultiplier, surgeCalcs, premiumTriggerCount,
+    spendCredits, incrementSurgeCalcs, addPremiumTriggers,
+  } = useStore();
 
   function goPaywall() {
     advance('paywall');
@@ -74,23 +102,118 @@ export function CalcPad() {
 
   const iouCalcsRef = useRef(0);
 
+  function showToast(data: CostToastData) {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToastData(data);
+    setToastKey((k) => k + 1);
+    toastTimerRef.current = setTimeout(() => setToastData(null), 2500);
+  }
+
+  const handleCooldownExpire = useCallback(() => {
+    setShowCooldown(false);
+    setCooldownUntil(null);
+  }, []);
+
   function executeEquals(state: CalcState) {
     const { state: next, computed } = press(state, '=');
-    setCalc(next);
-    if (computed) {
-      bumpUses();
-      if (stage === 'iou') {
-        iouCalcsRef.current += 1;
-        if (iouCalcsRef.current >= 1) advance('surge');
-      }
+
+    if (!computed) {
+      setCalc(next);
+      return;
     }
+
+    // IOU → surge transition
+    if (stage === 'iou') {
+      setCalc(next);
+      bumpUses();
+      iouCalcsRef.current += 1;
+      if (iouCalcsRef.current >= 1) advance('surge');
+      return;
+    }
+
+    // Credit-gated stages
+    if (SURGE_STAGES.has(stage)) {
+      const now = Date.now();
+
+      // Cooldown gate: still in cooldown?
+      if (cooldownUntil && now < cooldownUntil) {
+        setShowCooldown(true);
+        return;
+      }
+
+      // Rapid-calc check: ≥3 in last 10s → start new cooldown
+      const recentWindow = recentCalcs.filter((t) => now - t < RAPID_WINDOW_MS);
+      if (recentWindow.length >= RAPID_THRESHOLD) {
+        const expiry = now + COOLDOWN_MS;
+        setCooldownUntil(expiry);
+        setShowCooldown(true);
+        return;
+      }
+
+      // Evaluate triggers (only apply premium mult in 'premium'/'ads')
+      const { hit, mult: premiumMult } = evaluateTriggers(
+        computed.a, computed.b, computed.r, computed.op,
+      );
+      const effectiveMult = (stage === 'premium' || stage === 'ads') ? premiumMult : 1;
+      const cost = Math.ceil(BASE_COST * surgeMultiplier * effectiveMult);
+
+      // Insufficient credits?
+      if (credits < cost) {
+        setShowBuyCredits(true);
+        return; // display unchanged; user must buy credits then press = again
+      }
+
+      // Commit the calc
+      setCalc(next);
+      bumpUses();
+      spendCredits(cost);
+      setRecentCalcs([...recentCalcs, now].slice(-10));
+
+      // Toast
+      showToast({
+        expression: `${computed.a} ${computed.op} ${computed.b}`,
+        result: next.display,
+        baseCost: BASE_COST,
+        surge: surgeMultiplier,
+        hits: hit,
+        total: cost,
+        showPremium: stage === 'premium' || stage === 'ads',
+      });
+
+      // Big spender upsell
+      if (cost > 50) {
+        setBigSpenderCost(cost);
+        setShowBigSpender(true);
+      }
+
+      // Stage transitions
+      const newSurgeCalcs = surgeCalcs + 1;
+      incrementSurgeCalcs();
+      if (stage === 'surge' && newSurgeCalcs >= 5) {
+        advance('premium');
+        return;
+      }
+
+      if ((stage === 'premium' || stage === 'ads') && hit.length > 0) {
+        const newTriggerCount = premiumTriggerCount + hit.length;
+        addPremiumTriggers(hit.length);
+        if (stage === 'premium' && newTriggerCount >= 3) {
+          advance('ads');
+        }
+      }
+
+      return;
+    }
+
+    // Free stage
+    setCalc(next);
+    bumpUses();
   }
 
   function onKey(key: string) {
     bumpInteractions();
 
     if (key === '=') {
-      // only block on paywall state or a free-trial that's fully exhausted
       if (stage === 'paywall' || (stage === 'free' && uses >= 10)) {
         goPaywall();
         return;
@@ -142,6 +265,7 @@ export function CalcPad() {
         )}
       </div>
 
+      {/* Last use modal */}
       <AnimatePresence>
         {lastUseModal && (
           <motion.div
@@ -183,6 +307,32 @@ export function CalcPad() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Surge modals & toast */}
+      <CooldownModal
+        open={showCooldown}
+        expiresAt={cooldownUntil ?? Date.now() + COOLDOWN_MS}
+        onSkip={() => {
+          if (credits >= 10) {
+            spendCredits(10);
+            setRecentCalcs([]);
+            setCooldownUntil(null);
+            setShowCooldown(false);
+          }
+        }}
+        onWait={() => setShowCooldown(false)}
+        onExpire={handleCooldownExpire}
+      />
+
+      <BuyCredits open={showBuyCredits} onClose={() => setShowBuyCredits(false)} />
+
+      <BigSpenderUpsell
+        open={showBigSpender}
+        cost={bigSpenderCost}
+        onClose={() => setShowBigSpender(false)}
+      />
+
+      <CostToast toast={toastData} toastKey={toastKey} />
     </div>
   );
 }

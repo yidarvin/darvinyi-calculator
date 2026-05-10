@@ -3,6 +3,7 @@ import { Inter_Tight, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import OverlayHost from "@/components/overlays/OverlayHost";
 import DebtTicker from "@/components/chrome/DebtTicker";
+import { SurgeTimer } from "@/components/chrome/SurgeTimer";
 
 const interTight = Inter_Tight({
   variable: "--font-inter-tight",
@@ -35,6 +36,7 @@ export default function RootLayout({
         {children}
         <OverlayHost />
         <DebtTicker />
+        <SurgeTimer />
       </body>
     </html>
   );
