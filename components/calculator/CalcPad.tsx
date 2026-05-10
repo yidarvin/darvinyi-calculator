@@ -12,6 +12,7 @@ import { CostToast, type CostToastData } from '@/components/overlays/CostToast';
 import { CooldownModal } from '@/components/overlays/CooldownModal';
 import { BuyCredits } from '@/components/overlays/BuyCredits';
 import { BigSpenderUpsell } from '@/components/overlays/BigSpenderUpsell';
+import { VideoAdModal } from '@/components/overlays/VideoAdModal';
 
 type LastUseData = { a: number; op: string; b: number };
 
@@ -86,6 +87,8 @@ export function CalcPad() {
   const [showBuyCredits, setShowBuyCredits] = useState(false);
   const [showBigSpender, setShowBigSpender] = useState(false);
   const [bigSpenderCost, setBigSpenderCost] = useState(0);
+  const [showVideoAd, setShowVideoAd] = useState(false);
+  const videoAdCalcCountRef = useRef(0);
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -199,6 +202,14 @@ export function CalcPad() {
         addPremiumTriggers(hit.length);
         if (stage === 'premium' && newTriggerCount >= 3) {
           advance('ads');
+        }
+      }
+
+      // Video ad every 3rd successful calc in ads stage
+      if (stage === 'ads') {
+        videoAdCalcCountRef.current += 1;
+        if (videoAdCalcCountRef.current % 3 === 0) {
+          setShowVideoAd(true);
         }
       }
 
@@ -333,6 +344,8 @@ export function CalcPad() {
       />
 
       <CostToast toast={toastData} toastKey={toastKey} />
+
+      <VideoAdModal open={showVideoAd} onClose={() => setShowVideoAd(false)} />
     </div>
   );
 }

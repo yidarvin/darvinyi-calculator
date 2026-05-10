@@ -28,6 +28,7 @@ export type State = {
   surgeMultiplier: number;
   surgeCalcs: number;
   premiumTriggerCount: number;
+  videoAdsDismissed: number;
   debt: { principal: number; startedAt: number } | null;
   plan: "pro" | "max" | "enterprise" | null;
   flags: {
@@ -48,6 +49,8 @@ type Actions = {
   setSurge: (n: number) => void;
   incrementSurgeCalcs: () => void;
   addPremiumTriggers: (n: number) => void;
+  incrementVideoAdsDismissed: () => void;
+  setAdFree: () => void;
   setDebt: (principal: number) => void;
   setPlan: (p: "pro" | "max" | "enterprise") => void;
   recordCardAttempt: (a: Omit<CardAttempt, "ts">) => void;
@@ -65,6 +68,7 @@ const initialState: State = {
   surgeMultiplier: 1.0,
   surgeCalcs: 0,
   premiumTriggerCount: 0,
+  videoAdsDismissed: 0,
   debt: null,
   plan: null,
   flags: {
@@ -111,6 +115,12 @@ export const useStore = create<State & Actions>()(
 
       addPremiumTriggers: (n) =>
         set((s) => ({ premiumTriggerCount: s.premiumTriggerCount + n })),
+
+      incrementVideoAdsDismissed: () =>
+        set((s) => ({ videoAdsDismissed: s.videoAdsDismissed + 1 })),
+
+      setAdFree: () =>
+        set((s) => ({ flags: { ...s.flags, adFree: true } })),
 
       setDebt: (principal) =>
         set({ debt: { principal, startedAt: Date.now() } }),

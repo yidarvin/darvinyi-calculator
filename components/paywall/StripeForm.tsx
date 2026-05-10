@@ -6,16 +6,16 @@ import { useStore } from '@/lib/state';
 import { isLuhnValid, isPlausibleExpiry, hashLast4 } from '@/lib/luhn';
 import { BeratePopupStub } from '@/components/overlays/BeratePopup';
 
-const TIER_PRICES: Record<string, number> = { pro: 49, max: 199, enterprise: 2400 };
-const TIER_NAMES: Record<string, string> = { pro: 'PRO', max: 'MAX', enterprise: 'ENTERPRISE' };
+const TIER_PRICES: Record<string, number> = { pro: 49, max: 199, enterprise: 2400, 'ad-free': 79 };
+const TIER_NAMES: Record<string, string> = { pro: 'PRO', max: 'MAX', enterprise: 'ENTERPRISE', 'ad-free': 'AD-FREE' };
 
-type Tier = 'pro' | 'max' | 'enterprise';
+type Tier = 'pro' | 'max' | 'enterprise' | 'ad-free';
 
-export function StripeForm({ tier }: { tier: Tier }) {
+export function StripeForm({ tier, overridePrice }: { tier: Tier; overridePrice?: number }) {
   const router = useRouter();
-  const { recordCardAttempt, advance, setPlan } = useStore();
+  const { recordCardAttempt, advance, setPlan, setAdFree } = useStore();
 
-  const price = TIER_PRICES[tier];
+  const price = overridePrice ?? TIER_PRICES[tier];
   const tierName = TIER_NAMES[tier];
 
   const [email, setEmail] = useState('');
@@ -49,14 +49,22 @@ export function StripeForm({ tier }: { tier: Tier }) {
       setCardError('Your card expiration date is invalid.');
       return;
     }
-    recordCardAttempt({ last4Hash: hashLast4(raw), amount: price, context: 'subscribe' });
+    recordCardAttempt({
+      last4Hash: hashLast4(raw),
+      amount: price,
+      context: tier === 'ad-free' ? 'ad-free' : 'subscribe',
+    });
     setShowBerate(true);
   }
 
   function handleCharge() {
     setShowBerate(false);
-    setPlan(tier);
-    advance('surge');
+    if (tier === 'ad-free') {
+      setAdFree();
+    } else {
+      setPlan(tier);
+      advance('surge');
+    }
     router.push('/');
   }
 
@@ -172,31 +180,36 @@ export function StripeForm({ tier }: { tier: Tier }) {
               </button>
             </form>
 
+            {/* Divider + IOU CTA only for non-ad-free tiers */}
             {/* Divider */}
-            <div className="relative my-7">
+            {tier !== 'ad-free' && <div className="relative my-7">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-ink/10" />
               </div>
               <div className="relative flex justify-center text-xs text-ink-soft">
                 <span className="bg-paper px-3 italic">or, skip the card —</span>
               </div>
-            </div>
+            </div>}
 
             {/* IOU CTA — visually louder */}
-            <div className="relative">
-              <span className="absolute -top-3 right-4 z-10 bg-money text-paper text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full shadow-sm">
-                recommended
-              </span>
-              <Link
-                href="/paywall/iou"
-                className="relative block w-full text-center bg-money text-paper rounded-xl py-4 px-4 font-bold text-base hover:bg-money/90 transition-colors shadow"
-              >
-                📝 Pay later with IOU™
-              </Link>
-            </div>
-            <p className="text-center text-ink-soft text-xs mt-2">
-              0% down. Pay it off whenever.
-            </p>
+            {tier !== 'ad-free' && (
+              <>
+                <div className="relative">
+                  <span className="absolute -top-3 right-4 z-10 bg-money text-paper text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full shadow-sm">
+                    recommended
+                  </span>
+                  <Link
+                    href="/paywall/iou"
+                    className="relative block w-full text-center bg-money text-paper rounded-xl py-4 px-4 font-bold text-base hover:bg-money/90 transition-colors shadow"
+                  >
+                    📝 Pay later with IOU™
+                  </Link>
+                </div>
+                <p className="text-center text-ink-soft text-xs mt-2">
+                  0% down. Pay it off whenever.
+                </p>
+              </>
+            )}
           </div>
 
           {/* Right — order summary */}

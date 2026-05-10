@@ -1,14 +1,15 @@
 import { StripeForm } from '@/components/paywall/StripeForm';
 
-type Tier = 'pro' | 'max' | 'enterprise';
-const VALID_TIERS: Tier[] = ['pro', 'max', 'enterprise'];
+type Tier = 'pro' | 'max' | 'enterprise' | 'ad-free';
+const VALID_TIERS: Tier[] = ['pro', 'max', 'enterprise', 'ad-free'];
 
 export default async function CheckoutPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tier?: string }>;
+  searchParams: Promise<{ tier?: string; price?: string }>;
 }) {
-  const { tier: rawTier } = await searchParams;
+  const { tier: rawTier, price: rawPrice } = await searchParams;
   const tier: Tier = VALID_TIERS.includes(rawTier as Tier) ? (rawTier as Tier) : 'max';
-  return <StripeForm tier={tier} />;
+  const overridePrice = rawPrice ? parseInt(rawPrice, 10) : undefined;
+  return <StripeForm tier={tier} overridePrice={overridePrice} />;
 }
