@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -72,21 +72,30 @@ export function CalcPad() {
     router.push('/paywall');
   }
 
+  const iouCalcsRef = useRef(0);
+
   function executeEquals(state: CalcState) {
     const { state: next, computed } = press(state, '=');
     setCalc(next);
-    if (computed) bumpUses();
+    if (computed) {
+      bumpUses();
+      if (stage === 'iou') {
+        iouCalcsRef.current += 1;
+        if (iouCalcsRef.current >= 1) advance('surge');
+      }
+    }
   }
 
   function onKey(key: string) {
     bumpInteractions();
 
     if (key === '=') {
-      if (uses >= 10 || stage !== 'free') {
+      // only block on paywall state or a free-trial that's fully exhausted
+      if (stage === 'paywall' || (stage === 'free' && uses >= 10)) {
         goPaywall();
         return;
       }
-      if (uses === 9 && calc.op !== null && calc.pending !== null) {
+      if (stage === 'free' && uses === 9 && calc.op !== null && calc.pending !== null) {
         setLastUseModal({ a: calc.pending, op: calc.op, b: parseFloat(calc.display) });
         return;
       }
