@@ -95,7 +95,7 @@ export function CalcPad() {
   const {
     bumpUses, bumpInteractions, uses, stage, advance,
     credits, surgeMultiplier, surgeCalcs, premiumTriggerCount,
-    spendCredits, incrementSurgeCalcs, addPremiumTriggers,
+    spendCredits, incrementSurgeCalcs, addPremiumTriggers, plan,
   } = useStore();
 
   function goPaywall() {
@@ -183,8 +183,8 @@ export function CalcPad() {
         showPremium: stage === 'premium' || stage === 'ads',
       });
 
-      // Big spender upsell
-      if (cost > 50) {
+      // Big spender upsell (skip if already on max or enterprise)
+      if (cost > 50 && plan !== 'max' && plan !== 'enterprise') {
         setBigSpenderCost(cost);
         setShowBigSpender(true);
       }
