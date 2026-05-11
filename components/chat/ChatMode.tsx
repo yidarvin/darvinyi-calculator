@@ -6,7 +6,7 @@ import ChatInput from "./ChatInput";
 import Meters from "@/components/chrome/Meters";
 import { RestartButton } from "@/components/chrome/RestartButton";
 import TokensOutModal from "@/components/overlays/TokensOutModal";
-import BeratePopupStub from "@/components/overlays/BeratePopup";
+import { emit } from "@/lib/events";
 
 const MODELS = [
   { id: "gpt-4o-mini", label: "GPT-4o-mini", price: 0, free: true },
@@ -31,7 +31,6 @@ export default function ChatMode() {
   const [upsellModel, setUpsellModel] = useState<(typeof MODELS)[number] | null>(null);
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [showTokensOut, setShowTokensOut] = useState(false);
-  const [showBerate, setShowBerate] = useState(false);
   const tokenModalCount = useRef(0);
 
   // Sync to store whenever messages settle (not streaming)
@@ -188,7 +187,7 @@ export default function ChatMode() {
             </p>
             <div className="mt-5 flex gap-2">
               <button
-                onClick={() => setShowBerate(true)}
+                onClick={() => emit('berate.open', { amount: upsellModel.price, reason: 'subscribe', onAccept: () => setUpsellModel(null) })}
                 className="flex-1 py-2.5 bg-ai text-white rounded-xl text-sm font-medium hover:brightness-110 transition-all"
               >
                 Upgrade
@@ -204,26 +203,11 @@ export default function ChatMode() {
         </div>
       )}
 
-      {/* BeratePopup from model upsell */}
-      {showBerate && (
-        <BeratePopupStub
-          amount={upsellModel?.price ?? 0}
-          onClose={() => {
-            setShowBerate(false);
-            setUpsellModel(null);
-          }}
-          onCharge={() => {
-            setShowBerate(false);
-            setUpsellModel(null);
-          }}
-        />
-      )}
-
       {/* Tokens out modal */}
       {showTokensOut && (
         <TokensOutModal
           tokens={tokens}
-          onTopUp={() => setShowBerate(true)}
+          onTopUp={() => emit('berate.open', { amount: 9.99, reason: 'top-up', onAccept: () => setShowTokensOut(false) })}
           onDismiss={() => setShowTokensOut(false)}
         />
       )}

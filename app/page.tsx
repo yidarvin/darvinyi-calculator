@@ -8,6 +8,7 @@ import CreditBalance from '@/components/chrome/CreditBalance';
 import { AdBanner } from '@/components/chrome/AdBanner';
 import { AdFreeUpsell } from '@/components/overlays/AdFreeUpsell';
 import { RestartButton } from '@/components/chrome/RestartButton';
+import Link from 'next/link';
 import { useStore } from '@/lib/state';
 
 export default function Home() {
@@ -100,6 +101,12 @@ export default function Home() {
         open={showAdFreeUpsell}
         onClose={() => setShowAdFreeUpsell(false)}
       />
+
+      <footer className="text-center py-2">
+        <Link href="/receipts" className="text-[11px] text-ink-soft/50 hover:text-ink-soft transition-colors">
+          Receipts
+        </Link>
+      </footer>
     </div>
   );
 }

@@ -1,37 +1,84 @@
 "use client";
+import { motion } from 'framer-motion';
+import { useState } from 'react';
 
-type BeratePopupProps = {
+export type BerateContext = {
   amount: number;
-  onCharge: () => void;
-  onClose: () => void;
+  reason: 'subscribe' | 'iou-payoff' | 'ad-free' | 'top-up';
+  onAccept: () => void;
+  onCancel: () => void;
 };
 
-export function BeratePopupStub({ amount, onCharge, onClose }: BeratePopupProps) {
+const COPY = {
+  level1: {
+    title: 'WAIT. STOP.',
+    body: [
+      'You were about to pay real money for a **calculator**.',
+      'Every phone, every laptop, every microwave has one.',
+      "Your spouse's calculator works. Math works.",
+      '**We are not charging you. You\'re welcome.**',
+    ],
+    primary: "I know. I'm sorry.",
+    secondary: 'Charge me anyway',
+  },
+  level2: {
+    title: 'ARE YOU SERIOUS.',
+    body: [
+      'We told you. The calculator on your phone works fine.',
+      'Pressing this button again is a choice.',
+      '_A choice we cannot legally stop you from making._',
+    ],
+    primary: "OK, you're right. Stop.",
+    secondary: "I don't care. Charge me.",
+  },
+};
+
+function renderLine(line: string) {
+  return line
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/_(.+?)_/g, '<i>$1</i>');
+}
+
+export function BeratePopup({ amount, onAccept, onCancel }: BerateContext) {
+  const [level, setLevel] = useState<1 | 2>(1);
+  const copy = level === 1 ? COPY.level1 : COPY.level2;
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-paper border-2 border-alarm rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
-        <h2 className="text-2xl font-bold text-alarm">WAIT. STOP.</h2>
-        <p className="mt-3 text-ink">
-          You were about to pay <strong>${amount}</strong> for a calculator.
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4">
+      <motion.div
+        key={level}
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+        className="bg-paper border-4 border-alarm rounded-xl p-6 max-w-md w-full shadow-2xl"
+      >
+        <div className="text-5xl">⚠️</div>
+        <h2 className="mt-3 text-3xl font-bold text-alarm">{copy.title}</h2>
+        <div className="mt-3 space-y-2 text-ink">
+          {copy.body.map((line, i) => (
+            <p key={i} dangerouslySetInnerHTML={{ __html: renderLine(line) }} />
+          ))}
+        </div>
+        <p className="mt-3 text-sm text-ink-soft">
+          You were about to be charged <b>${amount.toFixed(2)}</b>.
         </p>
-        <p className="mt-2 text-sm italic text-ink-soft">[Real popup ships in phase 08.]</p>
-        <div className="mt-6 flex gap-3 justify-end">
+        <div className="mt-6 flex flex-col gap-2">
           <button
-            className="px-4 py-2 border border-ink/20 rounded-lg text-ink hover:bg-ink/5 transition-colors text-sm"
-            onClick={onClose}
+            className="w-full py-3 bg-money text-white rounded font-semibold"
+            onClick={onCancel}
           >
-            OK
+            {copy.primary}
           </button>
           <button
-            className="px-4 py-2 bg-ink text-paper rounded-lg hover:bg-ink/80 transition-colors text-sm font-medium"
-            onClick={onCharge}
+            className="w-full py-2 text-sm text-ink-soft underline"
+            onClick={() => (level === 1 ? setLevel(2) : onAccept())}
           >
-            Charge me anyway
+            {copy.secondary}
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
-export default BeratePopupStub;
+export default BeratePopup;

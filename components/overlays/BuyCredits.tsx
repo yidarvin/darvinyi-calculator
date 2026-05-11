@@ -2,8 +2,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '@/lib/state';
-import { isLuhnValid, isPlausibleExpiry, hashLast4 } from '@/lib/luhn';
-import { BeratePopupStub } from '@/components/overlays/BeratePopup';
+import { submitCard } from '@/lib/cardSubmit';
 
 type Pack = { credits: number; price: number; label: string; badge?: string };
 
@@ -19,13 +18,12 @@ type Props = {
 };
 
 export function BuyCredits({ open, onClose }: Props) {
-  const { addCredits, recordCardAttempt, addToDebt } = useStore();
+  const { addCredits, addToDebt } = useStore();
   const [selected, setSelected] = useState(0);
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
   const [cardError, setCardError] = useState<string | null>(null);
-  const [showBerate, setShowBerate] = useState(false);
   const [showEnterprise, setShowEnterprise] = useState(false);
 
   const pack = PACKS[selected];
@@ -47,22 +45,19 @@ export function BuyCredits({ open, onClose }: Props) {
       setShowEnterprise(true);
       return;
     }
-    const raw = cardNumber.replace(/\s/g, '');
-    if (!isLuhnValid(raw)) { setCardError('Your card number is invalid.'); return; }
-    if (!isPlausibleExpiry(expiry)) { setCardError('Expiration date is invalid.'); return; }
-    recordCardAttempt({ last4Hash: hashLast4(raw), amount: pack.price, context: 'top-up' });
-    setShowBerate(true);
-  }
-
-  function handleCharge() {
-    addCredits(pack.credits === Infinity ? 99999 : pack.credits);
-    setShowBerate(false);
-    onClose();
+    const result = submitCard(
+      { number: cardNumber, expiry, amount: pack.price, context: 'top-up' },
+      () => {
+        addCredits(pack.credits);
+        onClose();
+      }
+    );
+    if (!result.ok) setCardError(result.error);
   }
 
   function resetForm() {
     setCardNumber(''); setExpiry(''); setCvc(''); setCardError(null);
-    setShowBerate(false); setShowEnterprise(false);
+    setShowEnterprise(false);
   }
 
   function handleClose() { resetForm(); onClose(); }
@@ -218,14 +213,6 @@ export function BuyCredits({ open, onClose }: Props) {
         </motion.div>
       )}
 
-      {showBerate && (
-        <BeratePopupStub
-          key="berate-popup"
-          amount={pack.price}
-          onClose={() => setShowBerate(false)}
-          onCharge={handleCharge}
-        />
-      )}
     </AnimatePresence>
   );
 }

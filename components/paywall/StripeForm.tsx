@@ -3,8 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/state';
-import { isLuhnValid, isPlausibleExpiry, hashLast4 } from '@/lib/luhn';
-import { BeratePopupStub } from '@/components/overlays/BeratePopup';
+import { submitCard } from '@/lib/cardSubmit';
 
 const TIER_PRICES: Record<string, number> = { pro: 49, max: 199, enterprise: 2400, 'ad-free': 79 };
 const TIER_NAMES: Record<string, string> = { pro: 'PRO', max: 'MAX', enterprise: 'ENTERPRISE', 'ad-free': 'AD-FREE' };
@@ -13,7 +12,7 @@ type Tier = 'pro' | 'max' | 'enterprise' | 'ad-free';
 
 export function StripeForm({ tier, overridePrice }: { tier: Tier; overridePrice?: number }) {
   const router = useRouter();
-  const { recordCardAttempt, advance, setPlan, setAdFree, addToDebt } = useStore();
+  const { advance, setPlan, setAdFree, addToDebt } = useStore();
 
   const price = overridePrice ?? TIER_PRICES[tier];
   const tierName = TIER_NAMES[tier];
@@ -25,7 +24,6 @@ export function StripeForm({ tier, overridePrice }: { tier: Tier; overridePrice?
   const [country, setCountry] = useState('US');
   const [zip, setZip] = useState('');
   const [cardError, setCardError] = useState<string | null>(null);
-  const [showBerate, setShowBerate] = useState(false);
 
   function onCardChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, '').slice(0, 16);
@@ -40,32 +38,24 @@ export function StripeForm({ tier, overridePrice }: { tier: Tier; overridePrice?
 
   function handlePay(e: React.FormEvent) {
     e.preventDefault();
-    const raw = cardNumber.replace(/\s/g, '');
-    if (!isLuhnValid(raw)) {
-      setCardError('Your card number is invalid.');
-      return;
-    }
-    if (!isPlausibleExpiry(expiry)) {
-      setCardError('Your card expiration date is invalid.');
-      return;
-    }
-    recordCardAttempt({
-      last4Hash: hashLast4(raw),
-      amount: price,
-      context: tier === 'ad-free' ? 'ad-free' : 'subscribe',
-    });
-    setShowBerate(true);
-  }
-
-  function handleCharge() {
-    setShowBerate(false);
-    if (tier === 'ad-free') {
-      setAdFree();
-    } else {
-      setPlan(tier);
-      advance('surge');
-    }
-    router.push('/');
+    const result = submitCard(
+      {
+        number: cardNumber,
+        expiry,
+        amount: price,
+        context: tier === 'ad-free' ? 'ad-free' : 'subscribe',
+      },
+      () => {
+        if (tier === 'ad-free') {
+          setAdFree();
+        } else {
+          setPlan(tier);
+          advance('surge');
+        }
+        router.push('/');
+      }
+    );
+    if (!result.ok) setCardError(result.error);
   }
 
   const inputClass =
@@ -250,13 +240,6 @@ export function StripeForm({ tier, overridePrice }: { tier: Tier; overridePrice?
         </div>
       </div>
 
-      {showBerate && (
-        <BeratePopupStub
-          amount={price}
-          onClose={() => setShowBerate(false)}
-          onCharge={handleCharge}
-        />
-      )}
     </>
   );
 }
