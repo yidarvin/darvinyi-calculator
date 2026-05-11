@@ -18,6 +18,12 @@ export type CardAttempt = {
   context: "subscribe" | "iou-payoff" | "ad-free" | "top-up";
 };
 
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  streaming?: boolean;
+};
+
 export type State = {
   stage: Stage;
   uses: number;
@@ -38,6 +44,7 @@ export type State = {
     signupCompleted: boolean;
   };
   cardsAttempted: CardAttempt[];
+  chatMessages: ChatMessage[];
 };
 
 type Actions = {
@@ -55,6 +62,8 @@ type Actions = {
   setPlan: (p: "pro" | "max" | "enterprise") => void;
   recordCardAttempt: (a: Omit<CardAttempt, "ts">) => void;
   markOnboardingDone: (s: Stage) => void;
+  bumpTokens: (n: number) => void;
+  setChatMessages: (msgs: ChatMessage[]) => void;
   reset: () => void;
 };
 
@@ -78,6 +87,7 @@ const initialState: State = {
     signupCompleted: false,
   },
   cardsAttempted: [],
+  chatMessages: [],
 };
 
 export const useStore = create<State & Actions>()(
@@ -139,6 +149,14 @@ export const useStore = create<State & Actions>()(
             onboardingDone: { ...s.flags.onboardingDone, [stage]: true },
           },
         })),
+
+      bumpTokens: (n) =>
+        set((s) => ({
+          tokens: s.tokens + n,
+          waterLiters: +((s.tokens + n) * 0.0009).toFixed(2),
+        })),
+
+      setChatMessages: (msgs) => set({ chatMessages: msgs }),
 
       reset: () => set(initialState),
     }),

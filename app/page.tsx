@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalcPad } from '@/components/calculator/CalcPad';
+import ChatMode from '@/components/chat/ChatMode';
 import SurgeBanner from '@/components/chrome/SurgeBanner';
 import CreditBalance from '@/components/chrome/CreditBalance';
 import { AdBanner } from '@/components/chrome/AdBanner';
@@ -57,16 +58,22 @@ export default function Home() {
           </div>
         )}
 
-        {/* Center: calculator */}
-        <main className="flex-1 flex flex-col items-center justify-center p-6">
-          <header className="mb-8 text-center flex items-center gap-4">
-            <h1 className="font-sans text-2xl font-medium tracking-tight text-ink">
-              Calculator 2026
-            </h1>
-            <CreditBalance />
-          </header>
-          <CalcPad />
-        </main>
+        {/* Center: calculator or AI chat */}
+        {stage === 'ai' ? (
+          <main className="flex-1 flex flex-col min-h-0">
+            <ChatMode />
+          </main>
+        ) : (
+          <main className="flex-1 flex flex-col items-center justify-center p-6">
+            <header className="mb-8 text-center flex items-center gap-4">
+              <h1 className="font-sans text-2xl font-medium tracking-tight text-ink">
+                Calculator 2026
+              </h1>
+              <CreditBalance />
+            </header>
+            <CalcPad />
+          </main>
+        )}
 
         {/* Right rail — desktop only */}
         {showAds && (
