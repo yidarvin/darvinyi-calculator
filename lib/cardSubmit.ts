@@ -18,17 +18,32 @@ export function submitCard(input: CardInput, onCharge: () => void): CardResult {
   if (!isLuhnValid(digits)) return { ok: false, error: 'Your card number is invalid.' };
   if (!isPlausibleExpiry(input.expiry)) return { ok: false, error: 'Your card expiration date is invalid.' };
 
-  useStore.getState().recordCardAttempt({
-    last4Hash: hashLast4(digits),
-    amount: input.amount,
-    context: input.context,
-  });
+  function proceed() {
+    useStore.getState().recordCardAttempt({
+      last4Hash: hashLast4(digits),
+      amount: input.amount,
+      context: input.context,
+    });
+    emit('berate.open', {
+      amount: input.amount,
+      reason: input.context,
+      onAccept: onCharge,
+    });
+  }
 
-  emit('berate.open', {
-    amount: input.amount,
-    reason: input.context,
-    onAccept: onCharge,
-  });
+  if (!useStore.getState().flags.captchaPassed) {
+    emit('overlay.open', {
+      key: 'captcha',
+      props: {
+        onPass: () => {
+          useStore.getState().setCaptchaPassed();
+          proceed();
+        },
+      },
+    });
+    return { ok: true };
+  }
 
+  proceed();
   return { ok: true };
 }

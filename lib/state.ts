@@ -40,9 +40,11 @@ export type State = {
   flags: {
     adFree: boolean;
     captchaPassed: boolean;
+    cookiesAccepted: boolean;
     onboardingDone: Partial<Record<Stage, boolean>>;
     signupCompleted: boolean;
     lastCertShared: boolean;
+    achievements: string[];
   };
   cardsAttempted: CardAttempt[];
   chatMessages: ChatMessage[];
@@ -67,6 +69,10 @@ type Actions = {
   addToDebt: (amount: number) => void;
   bumpTokens: (n: number) => void;
   setChatMessages: (msgs: ChatMessage[]) => void;
+  setCaptchaPassed: () => void;
+  setSignupCompleted: () => void;
+  setCookiesAccepted: () => void;
+  addAchievement: (id: string) => void;
   reset: () => void;
 };
 
@@ -86,9 +92,11 @@ const initialState: State = {
   flags: {
     adFree: false,
     captchaPassed: false,
+    cookiesAccepted: false,
     onboardingDone: {},
     signupCompleted: false,
     lastCertShared: false,
+    achievements: [],
   },
   cardsAttempted: [],
   chatMessages: [],
@@ -175,6 +183,25 @@ export const useStore = create<State & Actions>()(
         })),
 
       setChatMessages: (msgs) => set({ chatMessages: msgs }),
+
+      setCaptchaPassed: () =>
+        set((s) => ({ flags: { ...s.flags, captchaPassed: true } })),
+
+      setSignupCompleted: () =>
+        set((s) => ({ flags: { ...s.flags, signupCompleted: true } })),
+
+      setCookiesAccepted: () =>
+        set((s) => ({ flags: { ...s.flags, cookiesAccepted: true } })),
+
+      addAchievement: (id) =>
+        set((s) => ({
+          flags: {
+            ...s.flags,
+            achievements: s.flags.achievements.includes(id)
+              ? s.flags.achievements
+              : [...s.flags.achievements, id],
+          },
+        })),
 
       reset: () => set(initialState),
     }),

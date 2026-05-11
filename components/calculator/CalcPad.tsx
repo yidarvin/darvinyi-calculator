@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { clsx } from 'clsx';
 import { initial, press, type CalcState } from './evaluator';
 import { useStore } from '@/lib/state';
+import { emit } from '@/lib/events';
 import { evaluateTriggers } from '@/lib/triggers';
 import { Display } from './Display';
 import { FreeTrialBanner } from './FreeTrialBanner';
@@ -103,11 +104,20 @@ export function CalcPad() {
     bumpUses, bumpInteractions, uses, stage, advance,
     credits, surgeMultiplier, surgeCalcs, premiumTriggerCount,
     spendCredits, incrementSurgeCalcs, addPremiumTriggers, plan,
+    flags,
   } = useStore();
 
   function goPaywall() {
     advance('paywall');
     router.push('/paywall');
+  }
+
+  function afterCalcSuccess() {
+    emit('calc.success', {});
+    // Signup gauntlet fires the first time uses reaches 3 (uses is pre-bump value here)
+    if (uses === 2 && !flags.signupCompleted) {
+      emit('overlay.open', { key: 'signup', props: {} });
+    }
   }
 
   const iouCalcsRef = useRef(0);
@@ -136,6 +146,7 @@ export function CalcPad() {
     if (stage === 'iou') {
       setCalc(next);
       bumpUses();
+      afterCalcSuccess();
       iouCalcsRef.current += 1;
       if (iouCalcsRef.current >= 1) advance('surge');
       return;
@@ -176,6 +187,7 @@ export function CalcPad() {
       // Commit the calc
       setCalc(next);
       bumpUses();
+      afterCalcSuccess();
       spendCredits(cost);
       setRecentCalcs([...recentCalcs, now].slice(-10));
 
@@ -226,6 +238,7 @@ export function CalcPad() {
     // Free stage
     setCalc(next);
     bumpUses();
+    afterCalcSuccess();
   }
 
   function onKey(key: string) {

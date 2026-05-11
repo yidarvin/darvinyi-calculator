@@ -8,6 +8,7 @@ import CreditBalance from '@/components/chrome/CreditBalance';
 import { AdBanner } from '@/components/chrome/AdBanner';
 import { AdFreeUpsell } from '@/components/overlays/AdFreeUpsell';
 import { RestartButton } from '@/components/chrome/RestartButton';
+import { ReferralButton } from '@/components/overlays/Referral';
 import Link from 'next/link';
 import { useStore } from '@/lib/state';
 
@@ -67,11 +68,12 @@ export default function Home() {
           </main>
         ) : (
           <main className="flex-1 flex flex-col items-center justify-center p-6">
-            <header className="mb-8 text-center flex items-center gap-4">
+            <header className="mb-8 text-center flex items-center gap-4 flex-wrap justify-center">
               <h1 className="font-sans text-2xl font-medium tracking-tight text-ink">
                 Calculator 2026
               </h1>
               <CreditBalance />
+              <ReferralButton />
               <RestartButton />
             </header>
             <CalcPad />

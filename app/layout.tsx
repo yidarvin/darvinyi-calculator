@@ -5,6 +5,10 @@ import OverlayHost from "@/components/overlays/OverlayHost";
 import DebtTicker from "@/components/chrome/DebtTicker";
 import { SurgeTimer } from "@/components/chrome/SurgeTimer";
 import { TourHost } from "@/components/tour/TourHost";
+import { CookieBanner } from "@/components/overlays/CookieBanner";
+import { Clippo } from "@/components/overlays/Clippo";
+import { AchievementsToast } from "@/components/overlays/AchievementsToast";
+import { ReviewNagController } from "@/components/overlays/ReviewNag";
 
 const interTight = Inter_Tight({
   variable: "--font-inter-tight",
@@ -39,6 +43,10 @@ export default function RootLayout({
         <DebtTicker />
         <SurgeTimer />
         <TourHost />
+        <CookieBanner />
+        <Clippo />
+        <AchievementsToast />
+        <ReviewNagController />
       </body>
     </html>
   );
