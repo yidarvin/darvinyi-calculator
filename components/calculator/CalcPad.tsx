@@ -68,6 +68,13 @@ function keyClass(key: string, wide?: boolean) {
   );
 }
 
+const KEY_ID: Record<string, string> = {
+  '=': 'key-eq', 'AC': 'key-ac', '±': 'key-pm', '%': 'key-pct',
+  '÷': 'key-div', '×': 'key-mul', '−': 'key-sub', '+': 'key-add', '.': 'key-dot',
+  '0': 'key-0', '1': 'key-1', '2': 'key-2', '3': 'key-3', '4': 'key-4',
+  '5': 'key-5', '6': 'key-6', '7': 'key-7', '8': 'key-8', '9': 'key-9',
+};
+
 const BASE_COST = 10;
 const COOLDOWN_MS = 47_000;
 const RAPID_WINDOW_MS = 10_000;
@@ -261,6 +268,7 @@ export function CalcPad() {
             row.map(({ label, key, wide }) => (
               <button
                 key={`${ri}-${key}`}
+                id={KEY_ID[key]}
                 className={keyClass(key, wide)}
                 onClick={() => onKey(key)}
                 aria-label={key}

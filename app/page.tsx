@@ -46,7 +46,7 @@ export default function Home() {
 
       {/* Top leaderboard banner */}
       {showAds && (
-        <div className="w-full overflow-x-auto border-b border-ad/20 flex justify-center bg-ad/5 py-1">
+        <div id="ad-top" className="w-full overflow-x-auto border-b border-ad/20 flex justify-center bg-ad/5 py-1">
           <AdBanner size="728x90" />
         </div>
       )}
@@ -79,7 +79,7 @@ export default function Home() {
 
         {/* Right rail — desktop only */}
         {showAds && (
-          <div className="hidden lg:flex flex-col gap-4 items-start pt-8 pl-2 pr-2 border-l border-ad/10">
+          <div id="ad-side" className="hidden lg:flex flex-col gap-4 items-start pt-8 pl-2 pr-2 border-l border-ad/10">
             <AdBanner size="300x250" />
           </div>
         )}

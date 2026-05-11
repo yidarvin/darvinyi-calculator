@@ -32,14 +32,14 @@ function AnimatedValue({ value, format }: { value: number; format: (v: number) =
 export default function Meters({ tokens, waterLiters }: MetersProps) {
   return (
     <div className="flex items-center gap-3 text-xs font-mono text-ink-soft">
-      <span title="Water usage estimate">
+      <span id="water-meter" title="Water usage estimate">
         💧{" "}
         <AnimatedValue
           value={waterLiters}
           format={(v) => `${v.toFixed(1)} L`}
         />
       </span>
-      <span title="Tokens consumed">
+      <span id="token-meter" title="Tokens consumed">
         🪙{" "}
         <AnimatedValue
           value={tokens}

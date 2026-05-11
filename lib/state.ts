@@ -42,6 +42,7 @@ export type State = {
     captchaPassed: boolean;
     onboardingDone: Partial<Record<Stage, boolean>>;
     signupCompleted: boolean;
+    lastCertShared: boolean;
   };
   cardsAttempted: CardAttempt[];
   chatMessages: ChatMessage[];
@@ -62,6 +63,7 @@ type Actions = {
   setPlan: (p: "pro" | "max" | "enterprise") => void;
   recordCardAttempt: (a: Omit<CardAttempt, "ts">) => void;
   markOnboardingDone: (s: Stage) => void;
+  markCertShared: () => void;
   addToDebt: (amount: number) => void;
   bumpTokens: (n: number) => void;
   setChatMessages: (msgs: ChatMessage[]) => void;
@@ -86,6 +88,7 @@ const initialState: State = {
     captchaPassed: false,
     onboardingDone: {},
     signupCompleted: false,
+    lastCertShared: false,
   },
   cardsAttempted: [],
   chatMessages: [],
@@ -150,6 +153,9 @@ export const useStore = create<State & Actions>()(
             onboardingDone: { ...s.flags.onboardingDone, [stage]: true },
           },
         })),
+
+      markCertShared: () =>
+        set((s) => ({ flags: { ...s.flags, lastCertShared: true } })),
 
       addToDebt: (amount) =>
         set((s) => {

@@ -129,6 +129,7 @@ export default function ChatMode() {
         {/* Model picker */}
         <div className="relative">
           <button
+            id="model-picker"
             onClick={() => setShowModelPicker((v) => !v)}
             className="flex items-center gap-1 text-xs font-mono text-ink-soft border border-ink/15 rounded-lg px-2 py-1 hover:border-ai/40 transition-colors"
           >

@@ -19,6 +19,7 @@ export default function ChatInput({ value, onChange, onSubmit, disabled }: ChatI
   return (
     <div className="border-t border-ink/10 bg-paper px-4 py-3 flex gap-2 items-end">
       <textarea
+        id="chat-input"
         className="flex-1 resize-none rounded-xl border border-ink/15 bg-white/60 px-3 py-2 text-sm font-sans text-ink placeholder:text-ink-soft focus:outline-none focus:ring-1 focus:ring-ai/40 min-h-[40px] max-h-[120px]"
         rows={1}
         placeholder="Ask anything… (e.g. what is 847 × 23)"

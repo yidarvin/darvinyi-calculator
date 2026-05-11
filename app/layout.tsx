@@ -4,6 +4,7 @@ import "./globals.css";
 import OverlayHost from "@/components/overlays/OverlayHost";
 import DebtTicker from "@/components/chrome/DebtTicker";
 import { SurgeTimer } from "@/components/chrome/SurgeTimer";
+import { TourHost } from "@/components/tour/TourHost";
 
 const interTight = Inter_Tight({
   variable: "--font-inter-tight",
@@ -37,6 +38,7 @@ export default function RootLayout({
         <OverlayHost />
         <DebtTicker />
         <SurgeTimer />
+        <TourHost />
       </body>
     </html>
   );

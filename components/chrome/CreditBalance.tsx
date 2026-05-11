@@ -10,7 +10,7 @@ export default function CreditBalance() {
   if (!CREDIT_STAGES.has(stage)) return null;
 
   return (
-    <div className="font-mono text-sm text-ink-soft border border-ink/10 rounded-full px-3 py-1 bg-paper tabular-nums">
+    <div id="credit-chip" className="font-mono text-sm text-ink-soft border border-ink/10 rounded-full px-3 py-1 bg-paper tabular-nums">
       🪙 {credits.toLocaleString()}
     </div>
   );

@@ -35,6 +35,7 @@ export function DebtTicker() {
   return (
     <>
       <button
+        id="debt-ticker"
         onClick={() => setOpen(true)}
         className="fixed top-3 right-3 z-40 bg-money text-white px-3 py-1.5 rounded font-mono text-xs shadow-[2px_2px_0_var(--color-ink)] border border-ink hover:brightness-110 transition-all"
       >

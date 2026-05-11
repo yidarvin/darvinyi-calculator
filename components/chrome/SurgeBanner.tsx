@@ -16,6 +16,7 @@ export default function SurgeBanner() {
 
   return (
     <div
+      id="surge-banner"
       className="w-full py-2 px-4 text-center text-white text-sm font-medium tracking-wide transition-[background-color] duration-700"
       style={{ backgroundColor: `oklch(${l} ${c} 30)` }}
     >

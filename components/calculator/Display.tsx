@@ -5,7 +5,7 @@ export function Display({ value }: { value: string }) {
   const len = value.length;
 
   return (
-    <div className="bg-ink rounded-2xl px-5 pt-5 pb-6 mb-4 flex items-end justify-end min-h-[96px]">
+    <div id="display" className="bg-ink rounded-2xl px-5 pt-5 pb-6 mb-4 flex items-end justify-end min-h-[96px]">
       <span
         className={clsx(
           'font-mono leading-none select-none tracking-tight',
