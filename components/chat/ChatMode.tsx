@@ -28,7 +28,6 @@ export default function ChatMode() {
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [selectedModel, setSelectedModel] = useState(MODELS[0].id);
-  const [upsellModel, setUpsellModel] = useState<(typeof MODELS)[number] | null>(null);
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [showTokensOut, setShowTokensOut] = useState(false);
   const tokenModalCount = useRef(0);
@@ -140,7 +139,7 @@ export default function ChatMode() {
   return (
     <div className="flex flex-col h-full w-full max-w-2xl mx-auto">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-ink/10 bg-paper/80 backdrop-blur-sm shrink-0">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-ink/10 bg-paper/80 backdrop-blur-sm shrink-0 relative z-30">
         <Meters tokens={tokens} waterLiters={waterLiters} />
         <RestartButton />
 
@@ -161,11 +160,7 @@ export default function ChatMode() {
                   key={m.id}
                   onClick={() => {
                     setShowModelPicker(false);
-                    if (!m.free) {
-                      setUpsellModel(m);
-                    } else {
-                      setSelectedModel(m.id);
-                    }
+                    setSelectedModel(m.id);
                   }}
                   className={`w-full text-left px-3 py-2 text-xs font-sans hover:bg-ai/5 transition-colors flex justify-between items-center ${
                     selectedModel === m.id ? "bg-ai/10 text-ai" : "text-ink"
@@ -192,35 +187,6 @@ export default function ChatMode() {
         onSubmit={send}
         disabled={pending}
       />
-
-      {/* Model upsell modal */}
-      {upsellModel && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-paper border border-ink/15 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h2 className="font-sans text-base font-semibold text-ink">
-              {upsellModel.label} requires the Premium subscription.
-            </h2>
-            <p className="mt-2 text-sm text-ink-soft font-sans">
-              Upgrade for{" "}
-              <span className="font-mono text-ink">${upsellModel.price}/calc</span>.
-            </p>
-            <div className="mt-5 flex gap-2">
-              <button
-                onClick={() => emit('berate.open', { amount: upsellModel.price, reason: 'subscribe', onAccept: () => setUpsellModel(null) })}
-                className="flex-1 py-2.5 bg-ai text-white rounded-xl text-sm font-medium hover:brightness-110 transition-all"
-              >
-                Upgrade
-              </button>
-              <button
-                onClick={() => setUpsellModel(null)}
-                className="flex-1 py-2.5 border border-ink/15 rounded-xl text-sm text-ink hover:bg-ink/5 transition-colors"
-              >
-                Stick with free
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Tokens out modal */}
       {showTokensOut && (

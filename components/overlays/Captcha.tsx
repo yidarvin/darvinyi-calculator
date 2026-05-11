@@ -16,7 +16,7 @@ const TILES = [
 
 type Props = {
   onPass: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
 };
 
 export function Captcha({ onPass, onCancel }: Props) {
@@ -35,6 +35,11 @@ export function Captcha({ onPass, onCancel }: Props) {
 
   function submit() {
     if (selected.size === 0) return;
+    const correctOnly = selected.size === 1 && selected.has(6);
+    if (correctOnly) {
+      onPass();
+      return;
+    }
     const next = attempt + 1;
     if (next < 3) {
       setAttempt(next);
@@ -91,12 +96,14 @@ export function Captcha({ onPass, onCancel }: Props) {
           >
             Verify
           </button>
-          <button
-            onClick={onCancel}
-            className="px-4 py-2.5 text-sm text-ink-soft border border-ink/20 rounded-full hover:border-ink/40 transition-colors"
-          >
-            Cancel
-          </button>
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              className="px-4 py-2.5 text-sm text-ink-soft border border-ink/20 rounded-full hover:border-ink/40 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </motion.div>
     </div>

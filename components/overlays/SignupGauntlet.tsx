@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/lib/state';
-import { emit } from '@/lib/events';
 import { Captcha } from './Captcha';
 
 type Props = { onClose: () => void };
@@ -46,6 +45,7 @@ export function SignupGauntlet({ onClose }: Props) {
   const [done, setDone] = useState(false);
   const [captchaPassed, setCaptchaPassed] = useState(false);
   const setSignupCompleted = useStore((s) => s.setSignupCompleted);
+  const setCaptchaPassedGlobal = useStore((s) => s.setCaptchaPassed);
 
   const totalSteps = STEPS.length;
   const current = STEPS[step];
@@ -58,13 +58,43 @@ export function SignupGauntlet({ onClose }: Props) {
       setError('This field is required.');
       return false;
     }
+    if (field === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email.trim())) {
+        setError('Please enter a valid email address.');
+        return false;
+      }
+    }
     if (field === 'emailConfirm' && data.email !== data.emailConfirm) {
       setError('Emails do not match.');
+      return false;
+    }
+    if (field === 'password' && data.password.length < 8) {
+      setError('Password must be at least 8 characters.');
       return false;
     }
     if (field === 'passwordConfirm' && data.password !== data.passwordConfirm) {
       setError('Passwords do not match.');
       return false;
+    }
+    if (field === 'dob') {
+      const dob = new Date(data.dob);
+      if (isNaN(dob.getTime())) {
+        setError('Please enter a valid date.');
+        return false;
+      }
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+      if (age < 13) {
+        setError('You must be at least 13 years old to use Calculator 2026.');
+        return false;
+      }
+      if (age > 120) {
+        setError('Please enter a valid date of birth.');
+        return false;
+      }
     }
     return true;
   }
@@ -86,7 +116,6 @@ export function SignupGauntlet({ onClose }: Props) {
 
   function finish() {
     setSignupCompleted();
-    emit('signup.completed', {});
     setDone(true);
     setTimeout(onClose, 2500);
   }
@@ -127,7 +156,7 @@ export function SignupGauntlet({ onClose }: Props) {
                 />
               </div>
             </div>
-            <Captcha onPass={() => setCaptchaPassed(true)} onCancel={onClose} />
+            <Captcha onPass={() => { setCaptchaPassedGlobal(); setCaptchaPassed(true); }} onCancel={onClose} />
           </div>
         </div>
       );
@@ -155,7 +184,6 @@ export function SignupGauntlet({ onClose }: Props) {
   }
 
   const fieldKey = current.field as keyof FormData;
-  const isFax = 'isFax' in current && current.isFax;
 
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4">
@@ -195,7 +223,13 @@ export function SignupGauntlet({ onClose }: Props) {
             <input
               type="file"
               accept="image/*"
-              onChange={() => {/* discarded */}}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setData((d) => ({ ...d, photo: file.name }));
+                  setError('');
+                }
+              }}
               className="block w-full text-sm text-ink-soft file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-ink file:text-paper mb-4"
             />
           ) : (
@@ -212,17 +246,6 @@ export function SignupGauntlet({ onClose }: Props) {
             />
           )}
 
-          {isFax && (
-            <p className="text-xs text-ink-soft mb-3">
-              Don't have a fax?{' '}
-              <button
-                onClick={() => emit('overlay.open', { key: 'berate' as const, props: { amount: 99, reason: 'subscribe', onAccept: () => {} } })}
-                className="underline text-alarm"
-              >
-                Buy one — $99
-              </button>
-            </p>
-          )}
 
           {error && <p className="text-xs text-alarm mb-3">{error}</p>}
 

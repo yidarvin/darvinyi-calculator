@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/state';
@@ -12,10 +12,7 @@ type Tier = 'pro' | 'max' | 'enterprise' | 'ad-free';
 
 export function StripeForm({ tier, overridePrice }: { tier: Tier; overridePrice?: number }) {
   const router = useRouter();
-  const { advance, setPlan, setAdFree, addToDebt } = useStore();
-
-  const price = overridePrice ?? TIER_PRICES[tier];
-  const tierName = TIER_NAMES[tier];
+  const { advance, setPlan, setAdFree, addToDebt, flags } = useStore();
 
   const [email, setEmail] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -24,6 +21,17 @@ export function StripeForm({ tier, overridePrice }: { tier: Tier; overridePrice?
   const [country, setCountry] = useState('US');
   const [zip, setZip] = useState('');
   const [cardError, setCardError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (flags.cardGaveUp) {
+      router.replace('/paywall/iou');
+    }
+  }, [flags.cardGaveUp, router]);
+
+  if (flags.cardGaveUp) return null;
+
+  const price = overridePrice ?? TIER_PRICES[tier];
+  const tierName = TIER_NAMES[tier];
 
   function onCardChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, '').slice(0, 16);

@@ -64,12 +64,6 @@ export function CooldownModal({ open, expiresAt, onSkip, onWait, onExpire }: Pro
               >
                 Skip cooldown — 10 credits
               </button>
-              <button
-                className="w-full text-ink-soft rounded-full py-3 font-sans text-sm hover:text-ink transition-colors"
-                onClick={onWait}
-              >
-                I&apos;ll wait
-              </button>
             </div>
           </motion.div>
         </motion.div>

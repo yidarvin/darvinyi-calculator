@@ -32,7 +32,7 @@ const PLANS = [
 
 export default function IOUPage() {
   const router = useRouter();
-  const { setDebt, advance, setPlan } = useStore();
+  const { addToDebt, advance, setPlan, stage } = useStore();
   const [selectedPlan, setSelectedPlan] = useState<'pro' | 'max'>('max');
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [legalOpen, setLegalOpen] = useState(false);
@@ -48,9 +48,9 @@ export default function IOUPage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('iouSignature', signatureData);
     }
-    setDebt(plan.price);
+    addToDebt(plan.price);
     setPlan(selectedPlan);
-    advance('iou');
+    if (stage === 'free' || stage === 'paywall') advance('iou');
     router.push('/');
   }
 

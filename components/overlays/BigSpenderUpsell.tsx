@@ -9,7 +9,7 @@ type Props = {
 };
 
 export function BigSpenderUpsell({ open, cost, onClose }: Props) {
-  const { addToDebt } = useStore();
+  const { addToDebt, setPlan } = useStore();
   return (
     <AnimatePresence>
       {open && (
@@ -47,7 +47,7 @@ export function BigSpenderUpsell({ open, cost, onClose }: Props) {
                 </span>
                 <button
                   className="w-full bg-money text-paper rounded-full py-3 font-sans font-semibold text-sm hover:bg-money/90 transition-colors"
-                  onClick={() => { addToDebt(499); onClose(); }}
+                  onClick={() => { addToDebt(499); setPlan('max'); onClose(); }}
                 >
                   📝 Pay with IOU™ — add $499 to your tab
                 </button>

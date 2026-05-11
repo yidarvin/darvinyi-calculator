@@ -43,7 +43,7 @@ export default function Home() {
   const showAds = stage === 'ads' || stage === 'ai';
 
   return (
-    <div className="min-h-dvh flex flex-col">
+    <div className="h-dvh flex flex-col">
       <SurgeBanner />
 
       {/* Top leaderboard banner */}

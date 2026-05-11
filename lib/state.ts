@@ -47,6 +47,7 @@ export type State = {
     achievements: string[];
     soundEnabled: boolean;
     reduceMotion: boolean;
+    cardGaveUp: boolean;
   };
   cardsAttempted: CardAttempt[];
   chatMessages: ChatMessage[];
@@ -77,6 +78,7 @@ type Actions = {
   addAchievement: (id: string) => void;
   setSoundEnabled: (v: boolean) => void;
   setReduceMotion: (v: boolean) => void;
+  setCardGaveUp: () => void;
   reset: () => void;
 };
 
@@ -103,6 +105,7 @@ const initialState: State = {
     achievements: [],
     soundEnabled: false,
     reduceMotion: false,
+    cardGaveUp: false,
   },
   cardsAttempted: [],
   chatMessages: [],
@@ -214,6 +217,9 @@ export const useStore = create<State & Actions>()(
 
       setReduceMotion: (v) =>
         set((s) => ({ flags: { ...s.flags, reduceMotion: v } })),
+
+      setCardGaveUp: () =>
+        set((s) => ({ flags: { ...s.flags, cardGaveUp: true } })),
 
       reset: () => set(initialState),
     }),

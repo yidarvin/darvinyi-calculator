@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { on, off } from '@/lib/events';
+import { useStore } from '@/lib/state';
 import { BeratePopup, BerateContext } from './BeratePopup';
 import { ReviewNag } from './ReviewNag';
 import { Captcha } from './Captcha';
@@ -25,6 +27,8 @@ export type OverlayPayload = { key: OverlayKey; props: Record<string, unknown> }
 export function OverlayHost() {
   const [queue, setQueue] = useState<OverlayPayload[]>([]);
   const current = queue[0];
+  const router = useRouter();
+  const setCardGaveUp = useStore((s) => s.setCardGaveUp);
 
   function dismiss() {
     setQueue((q) => q.slice(1));
@@ -36,7 +40,7 @@ export function OverlayHost() {
     on('overlay.open', pushHandler);
 
     // Berate preempts — insert at front
-    const berateHandler = (payload: Omit<BerateContext, 'onCancel'>) =>
+    const berateHandler = (payload: Omit<BerateContext, 'onCancel' | 'onGiveUp'>) =>
       setQueue((q) => [{ key: 'berate', props: payload as Record<string, unknown> }, ...q]);
     on('berate.open', berateHandler);
 
@@ -49,13 +53,17 @@ export function OverlayHost() {
   if (!current) return null;
 
   if (current.key === 'berate') {
-    const p = current.props as unknown as Omit<BerateContext, 'onCancel'>;
+    const p = current.props as unknown as Omit<BerateContext, 'onCancel' | 'onGiveUp'>;
     return (
       <BeratePopup
         amount={p.amount}
         reason={p.reason}
-        onAccept={() => { p.onAccept(); dismiss(); }}
         onCancel={dismiss}
+        onGiveUp={() => {
+          setCardGaveUp();
+          dismiss();
+          router.push('/paywall/iou');
+        }}
       />
     );
   }
@@ -69,7 +77,6 @@ export function OverlayHost() {
     return (
       <Captcha
         onPass={() => { p.onPass(); dismiss(); }}
-        onCancel={dismiss}
       />
     );
   }

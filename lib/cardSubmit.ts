@@ -27,7 +27,6 @@ export function submitCard(input: CardInput, onCharge: () => void): CardResult {
     emit('berate.open', {
       amount: input.amount,
       reason: input.context,
-      onAccept: onCharge,
     });
   }
 
