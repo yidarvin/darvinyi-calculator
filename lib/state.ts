@@ -45,6 +45,8 @@ export type State = {
     signupCompleted: boolean;
     lastCertShared: boolean;
     achievements: string[];
+    soundEnabled: boolean;
+    reduceMotion: boolean;
   };
   cardsAttempted: CardAttempt[];
   chatMessages: ChatMessage[];
@@ -73,6 +75,8 @@ type Actions = {
   setSignupCompleted: () => void;
   setCookiesAccepted: () => void;
   addAchievement: (id: string) => void;
+  setSoundEnabled: (v: boolean) => void;
+  setReduceMotion: (v: boolean) => void;
   reset: () => void;
 };
 
@@ -97,6 +101,8 @@ const initialState: State = {
     signupCompleted: false,
     lastCertShared: false,
     achievements: [],
+    soundEnabled: false,
+    reduceMotion: false,
   },
   cardsAttempted: [],
   chatMessages: [],
@@ -202,6 +208,12 @@ export const useStore = create<State & Actions>()(
               : [...s.flags.achievements, id],
           },
         })),
+
+      setSoundEnabled: (v) =>
+        set((s) => ({ flags: { ...s.flags, soundEnabled: v } })),
+
+      setReduceMotion: (v) =>
+        set((s) => ({ flags: { ...s.flags, reduceMotion: v } })),
 
       reset: () => set(initialState),
     }),

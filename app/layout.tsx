@@ -9,6 +9,7 @@ import { CookieBanner } from "@/components/overlays/CookieBanner";
 import { Clippo } from "@/components/overlays/Clippo";
 import { AchievementsToast } from "@/components/overlays/AchievementsToast";
 import { ReviewNagController } from "@/components/overlays/ReviewNag";
+import { KonamiListener } from "@/components/chrome/KonamiListener";
 
 const interTight = Inter_Tight({
   variable: "--font-inter-tight",
@@ -47,6 +48,7 @@ export default function RootLayout({
         <Clippo />
         <AchievementsToast />
         <ReviewNagController />
+        <KonamiListener />
       </body>
     </html>
   );

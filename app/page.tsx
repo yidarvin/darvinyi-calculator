@@ -104,9 +104,12 @@ export default function Home() {
         onClose={() => setShowAdFreeUpsell(false)}
       />
 
-      <footer className="text-center py-2">
+      <footer className="text-center py-2 flex items-center justify-center gap-4">
         <Link href="/receipts" className="text-[11px] text-ink-soft/50 hover:text-ink-soft transition-colors">
           Receipts
+        </Link>
+        <Link href="/settings" className="text-[11px] text-ink-soft/50 hover:text-ink-soft transition-colors">
+          Settings
         </Link>
       </footer>
     </div>

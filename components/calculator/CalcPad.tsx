@@ -14,6 +14,10 @@ import { CooldownModal } from '@/components/overlays/CooldownModal';
 import { BuyCredits } from '@/components/overlays/BuyCredits';
 import { BigSpenderUpsell } from '@/components/overlays/BigSpenderUpsell';
 import { VideoAdModal } from '@/components/overlays/VideoAdModal';
+import { playSound } from '@/lib/sounds';
+
+// Easter egg: BOOBS sequence (stage 'free' only)
+const BOOBS_SEQ = ['8', '0', '0', '8', '5', '='];
 
 type LastUseData = { a: number; op: string; b: number };
 
@@ -99,6 +103,10 @@ export function CalcPad() {
   const videoAdCalcCountRef = useRef(0);
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const boobsSeqRef = useRef<string[]>([]);
+  const [boobsMode, setBoobsMode] = useState(false);
+  const [eggToast, setEggToast] = useState<string | null>(null);
+  const eggToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     bumpUses, bumpInteractions, uses, stage, advance,
@@ -241,8 +249,28 @@ export function CalcPad() {
     afterCalcSuccess();
   }
 
+  function showEggToast(msg: string) {
+    if (eggToastTimer.current) clearTimeout(eggToastTimer.current);
+    setEggToast(msg);
+    eggToastTimer.current = setTimeout(() => setEggToast(null), 3000);
+  }
+
   function onKey(key: string) {
     bumpInteractions();
+    playSound('click');
+
+    // Easter egg: BOOBS sequence (stage 'free' only)
+    if (stage === 'free') {
+      const seq = boobsSeqRef.current;
+      seq.push(key);
+      if (seq.length > BOOBS_SEQ.length) seq.shift();
+      if (seq.length === BOOBS_SEQ.length && seq.every((k, i) => k === BOOBS_SEQ[i])) {
+        boobsSeqRef.current = [];
+        setBoobsMode(true);
+        setTimeout(() => setBoobsMode(false), 2000);
+        return;
+      }
+    }
 
     if (key === '=') {
       if (stage === 'paywall' || (stage === 'free' && uses >= 10)) {
@@ -258,6 +286,12 @@ export function CalcPad() {
     }
 
     const { state: next } = press(calc, key);
+
+    // Easter egg: "42" toast
+    if (next.display === '42' && stage === 'free') {
+      showEggToast("Don't panic.");
+    }
+
     setCalc(next);
   }
 
@@ -273,8 +307,11 @@ export function CalcPad() {
 
   return (
     <div className="w-full max-w-xs">
-      <div className="rounded-[2rem] bg-[#f0ece4] p-5 shadow-md border border-black/5">
-        <Display value={calc.display} />
+      <div
+        className="rounded-[2rem] bg-[#f0ece4] p-5 shadow-md border border-black/5"
+        style={boobsMode ? { transform: 'rotate(180deg)', transition: 'transform 0.3s' } : {}}
+      >
+        <Display value={boobsMode ? 'BOOBS' : calc.display} />
 
         <div className="grid grid-cols-4 gap-[10px]">
           {ROWS.map((row, ri) =>
@@ -367,6 +404,21 @@ export function CalcPad() {
       <CostToast toast={toastData} toastKey={toastKey} />
 
       <VideoAdModal open={showVideoAd} onClose={() => setShowVideoAd(false)} />
+
+      {/* Easter egg toasts */}
+      <AnimatePresence>
+        {eggToast && (
+          <motion.div
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-ai text-white rounded-2xl px-5 py-3 shadow-xl pointer-events-none text-sm font-medium"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+          >
+            {eggToast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

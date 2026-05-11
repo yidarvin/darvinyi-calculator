@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -11,6 +11,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '@/lib/state';
 import { debtAt, projectDebt, formatDebt } from '@/lib/iou';
 
@@ -26,6 +27,14 @@ export default function DebtPage() {
   const debt = useStore(s => s.debt);
   const router = useRouter();
   const [now, setNow] = useState(() => Date.now());
+  const [axisToast, setAxisToast] = useState(false);
+  const axisTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function onAxisClick() {
+    setAxisToast(true);
+    if (axisTimer.current) clearTimeout(axisTimer.current);
+    axisTimer.current = setTimeout(() => setAxisToast(false), 4000);
+  }
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -34,9 +43,19 @@ export default function DebtPage() {
 
   if (!debt) {
     return (
-      <main className="min-h-dvh flex flex-col items-center justify-center px-4 text-center">
-        <p className="text-ink-soft text-sm">No debt on file. Yet.</p>
-        <Link href="/" className="mt-4 text-xs underline text-ink-soft hover:text-ink">← Back to calculator</Link>
+      <main className="min-h-dvh flex flex-col items-center justify-center px-4 text-center gap-4">
+        <div className="text-4xl">💸</div>
+        <h1 className="text-2xl font-bold text-ink">You&apos;re debt-free!</h1>
+        <p className="text-ink-soft text-sm max-w-xs">
+          No outstanding balance. Why not sign an IOU to fix that?
+        </p>
+        <Link
+          href="/paywall"
+          className="mt-2 px-5 py-2.5 bg-money text-white rounded-full text-sm font-semibold hover:brightness-110 transition-all"
+        >
+          Sign now →
+        </Link>
+        <Link href="/" className="text-xs underline text-ink-soft hover:text-ink">← Back to calculator</Link>
       </main>
     );
   }
@@ -85,7 +104,7 @@ export default function DebtPage() {
       </div>
 
       {/* Chart */}
-      <div className="w-full h-64">
+      <div className="w-full h-64 relative">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,22,18,0.08)" />
@@ -117,7 +136,29 @@ export default function DebtPage() {
             />
           </LineChart>
         </ResponsiveContainer>
+
+        {/* Clickable y-axis label overlay — easter egg */}
+        <button
+          onClick={onAxisClick}
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-full opacity-0 cursor-pointer"
+          aria-label="Y-axis label"
+          title="Click me"
+        />
       </div>
+
+      <AnimatePresence>
+        {axisToast && (
+          <motion.div
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-money text-white rounded-2xl px-5 py-3 shadow-xl text-sm font-medium pointer-events-none max-w-xs text-center"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+          >
+            Compound interest is the eighth wonder of the world. We're billing for it.
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Stats grid */}
       <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4">

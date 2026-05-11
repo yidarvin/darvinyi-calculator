@@ -52,10 +52,29 @@ export default function ChatMode() {
     }
   }, [tokens]);
 
+  function isOneAndOne(s: string) {
+    return /^\s*what\s+is\s+1\s*\+\s*1\s*\??\s*$/i.test(s);
+  }
+
   async function send() {
     if (!input.trim() || pending) return;
     const userMsg: ChatMessage = { role: "user", content: input };
     const next = [...messages, userMsg];
+
+    // Easter egg: "what is 1+1" three times in a row → skip API
+    const userMsgs = next.filter((m) => m.role === "user");
+    if (
+      userMsgs.length >= 3 &&
+      userMsgs.slice(-3).every((m) => isOneAndOne(m.content))
+    ) {
+      setMessages([
+        ...next,
+        { role: "assistant", content: "fine. it's 2." },
+      ]);
+      setInput("");
+      return;
+    }
+
     setMessages([...next, { role: "assistant", content: "", streaming: true }]);
     setInput("");
     setPending(true);
