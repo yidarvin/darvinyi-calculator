@@ -1,5 +1,6 @@
 'use client';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useStore } from '@/lib/state';
 
 type Props = {
   open: boolean;
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function BigSpenderUpsell({ open, cost, onClose }: Props) {
+  const { addToDebt } = useStore();
   return (
     <AnimatePresence>
       {open && (
@@ -39,6 +41,17 @@ export function BigSpenderUpsell({ open, cost, onClose }: Props) {
               >
                 Upgrade — $499/mo
               </a>
+              <div className="relative">
+                <span className="absolute -top-3 right-4 z-10 bg-money text-paper text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full shadow-sm">
+                  recommended
+                </span>
+                <button
+                  className="w-full bg-money text-paper rounded-full py-3 font-sans font-semibold text-sm hover:bg-money/90 transition-colors"
+                  onClick={() => { addToDebt(499); onClose(); }}
+                >
+                  📝 Pay with IOU™ — add $499 to your tab
+                </button>
+              </div>
               <button
                 className="w-full text-ink-soft rounded-full py-3 font-sans text-sm hover:text-ink transition-colors"
                 onClick={onClose}

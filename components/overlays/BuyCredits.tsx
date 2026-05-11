@@ -19,7 +19,7 @@ type Props = {
 };
 
 export function BuyCredits({ open, onClose }: Props) {
-  const { addCredits, recordCardAttempt } = useStore();
+  const { addCredits, recordCardAttempt, addToDebt } = useStore();
   const [selected, setSelected] = useState(0);
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -67,6 +67,13 @@ export function BuyCredits({ open, onClose }: Props) {
 
   function handleClose() { resetForm(); onClose(); }
 
+  function handleIOU() {
+    addToDebt(pack.credits === Infinity ? 999 : pack.price);
+    addCredits(pack.credits === Infinity ? 99999 : pack.credits);
+    resetForm();
+    onClose();
+  }
+
   const inputClass =
     'w-full border border-ink/20 rounded-lg px-3 py-2.5 text-sm bg-white placeholder:text-ink/30 focus:outline-none focus:border-ink/50 transition-colors';
 
@@ -74,6 +81,7 @@ export function BuyCredits({ open, onClose }: Props) {
     <AnimatePresence>
       {open && (
         <motion.div
+          key="buy-credits-backdrop"
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/50 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -161,6 +169,32 @@ export function BuyCredits({ open, onClose }: Props) {
                 </button>
               </form>
             )}
+
+            {/* IoU divider + CTA */}
+            {pack.credits !== Infinity && (
+              <>
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-ink/10" />
+                  </div>
+                  <div className="relative flex justify-center text-xs text-ink-soft">
+                    <span className="bg-paper px-3 italic">or, skip the card —</span>
+                  </div>
+                </div>
+                <div className="relative">
+                  <span className="absolute -top-3 right-4 z-10 bg-money text-paper text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full shadow-sm">
+                    recommended
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleIOU}
+                    className="w-full bg-money text-paper rounded-xl py-3.5 px-4 font-bold text-sm hover:bg-money/90 transition-colors shadow"
+                  >
+                    📝 Pay with IOU™ — add ${pack.price} to your tab
+                  </button>
+                </div>
+              </>
+            )}
           </motion.div>
 
           {/* Enterprise fake modal */}
@@ -186,6 +220,7 @@ export function BuyCredits({ open, onClose }: Props) {
 
       {showBerate && (
         <BeratePopupStub
+          key="berate-popup"
           amount={pack.price}
           onClose={() => setShowBerate(false)}
           onCharge={handleCharge}

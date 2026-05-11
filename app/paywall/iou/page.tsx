@@ -25,12 +25,20 @@ This IOU Agreement ("Agreement") constitutes a legally binding financial obligat
 
 IN WITNESS WHEREOF, Borrower has affixed their signature below, accepting all terms, including those yet to be written.`;
 
+const PLANS = [
+  { id: 'pro' as const,  label: 'PRO',  price: 49,  desc: '+, −, ×, ÷' },
+  { id: 'max' as const,  label: 'MAX',  price: 199, desc: '+, %, ±, decimals', recommended: true },
+];
+
 export default function IOUPage() {
   const router = useRouter();
-  const { setDebt, advance } = useStore();
+  const { setDebt, advance, setPlan } = useStore();
+  const [selectedPlan, setSelectedPlan] = useState<'pro' | 'max'>('max');
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [legalOpen, setLegalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const plan = PLANS.find((p) => p.id === selectedPlan)!;
 
   function handleSign() {
     if (!signatureData) {
@@ -40,7 +48,8 @@ export default function IOUPage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('iouSignature', signatureData);
     }
-    setDebt(0.01);
+    setDebt(plan.price);
+    setPlan(selectedPlan);
     advance('iou');
     router.push('/');
   }
@@ -60,6 +69,38 @@ export default function IOUPage() {
           <strong className="text-money">20% per week, compounding</strong> loan from{' '}
           <strong>Calculator 2026 Financial Inc.</strong>
         </p>
+
+        {/* Plan selector */}
+        <div className="mb-6">
+          <p className="text-[10px] text-ink-soft uppercase tracking-widest mb-2">Select your plan</p>
+          <div className="flex flex-col gap-2">
+            {PLANS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setSelectedPlan(p.id)}
+                className={`relative flex items-center justify-between rounded-xl border px-4 py-3 text-sm transition-colors ${
+                  selectedPlan === p.id
+                    ? 'border-money bg-money/5 text-ink'
+                    : 'border-ink/15 text-ink-soft hover:border-ink/30'
+                }`}
+              >
+                <span className="font-medium">
+                  {p.label}
+                  <span className="ml-2 text-xs text-ink-soft font-normal">{p.desc}</span>
+                </span>
+                <span className="flex items-center gap-2">
+                  {p.recommended && (
+                    <span className="text-[10px] font-bold uppercase tracking-widest bg-money text-paper rounded-full px-2 py-0.5">
+                      recommended
+                    </span>
+                  )}
+                  <span className="font-mono">${p.price}/mo</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Collapsible fine print */}
         <div className="mb-6">
@@ -91,15 +132,15 @@ export default function IOUPage() {
           onClick={handleSign}
           className="w-full mt-6 bg-money text-paper rounded-xl py-4 font-bold text-base hover:bg-money/90 transition-colors shadow"
         >
-          I solemnly swear (Sign IOU)
+          I solemnly swear — charge ${plan.price}/mo to my IOU
         </button>
 
         <div className="mt-4 text-center">
           <Link
-            href="/paywall/checkout?tier=max"
+            href={`/paywall/checkout?tier=${selectedPlan}`}
             className="text-ink-soft text-xs hover:text-ink underline transition-colors"
           >
-            Actually I'll pay $199 →
+            Actually I&apos;ll pay ${plan.price} with a card →
           </Link>
         </div>
       </div>

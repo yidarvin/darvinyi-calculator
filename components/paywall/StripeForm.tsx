@@ -13,7 +13,7 @@ type Tier = 'pro' | 'max' | 'enterprise' | 'ad-free';
 
 export function StripeForm({ tier, overridePrice }: { tier: Tier; overridePrice?: number }) {
   const router = useRouter();
-  const { recordCardAttempt, advance, setPlan, setAdFree } = useStore();
+  const { recordCardAttempt, advance, setPlan, setAdFree, addToDebt } = useStore();
 
   const price = overridePrice ?? TIER_PRICES[tier];
   const tierName = TIER_NAMES[tier];
@@ -180,36 +180,41 @@ export function StripeForm({ tier, overridePrice }: { tier: Tier; overridePrice?
               </button>
             </form>
 
-            {/* Divider + IOU CTA only for non-ad-free tiers */}
             {/* Divider */}
-            {tier !== 'ad-free' && <div className="relative my-7">
+            <div className="relative my-7">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-ink/10" />
               </div>
               <div className="relative flex justify-center text-xs text-ink-soft">
                 <span className="bg-paper px-3 italic">or, skip the card —</span>
               </div>
-            </div>}
+            </div>
 
             {/* IOU CTA — visually louder */}
-            {tier !== 'ad-free' && (
-              <>
-                <div className="relative">
-                  <span className="absolute -top-3 right-4 z-10 bg-money text-paper text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full shadow-sm">
-                    recommended
-                  </span>
-                  <Link
-                    href="/paywall/iou"
-                    className="relative block w-full text-center bg-money text-paper rounded-xl py-4 px-4 font-bold text-base hover:bg-money/90 transition-colors shadow"
-                  >
-                    📝 Pay later with IOU™
-                  </Link>
-                </div>
-                <p className="text-center text-ink-soft text-xs mt-2">
-                  0% down. Pay it off whenever.
-                </p>
-              </>
-            )}
+            <div className="relative">
+              <span className="absolute -top-3 right-4 z-10 bg-money text-paper text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full shadow-sm">
+                recommended
+              </span>
+              {tier === 'ad-free' ? (
+                <button
+                  type="button"
+                  onClick={() => { addToDebt(price); setAdFree(); router.push('/'); }}
+                  className="relative w-full text-center bg-money text-paper rounded-xl py-4 px-4 font-bold text-base hover:bg-money/90 transition-colors shadow"
+                >
+                  📝 Pay later with IOU™
+                </button>
+              ) : (
+                <Link
+                  href="/paywall/iou"
+                  className="relative block w-full text-center bg-money text-paper rounded-xl py-4 px-4 font-bold text-base hover:bg-money/90 transition-colors shadow"
+                >
+                  📝 Pay later with IOU™
+                </Link>
+              )}
+            </div>
+            <p className="text-center text-ink-soft text-xs mt-2">
+              0% down. Pay it off whenever.
+            </p>
           </div>
 
           {/* Right — order summary */}

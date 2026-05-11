@@ -1,6 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useStore } from '@/lib/state';
 
 type Props = {
   open: boolean;
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function AdFreeUpsell({ open, onClose }: Props) {
+  const { addToDebt, setAdFree } = useStore();
   return (
     <AnimatePresence>
       {open && (
@@ -41,8 +43,19 @@ export function AdFreeUpsell({ open, onClose }: Props) {
                 className="w-full bg-ad text-paper rounded-full py-3 font-sans font-semibold text-sm text-center hover:opacity-90 transition-opacity"
                 onClick={onClose}
               >
-                Go Ad-Free
+                Go Ad-Free — $79/mo
               </Link>
+              <div className="relative">
+                <span className="absolute -top-3 right-4 z-10 bg-money text-paper text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full shadow-sm">
+                  recommended
+                </span>
+                <button
+                  className="w-full bg-money text-paper rounded-full py-3 font-sans font-semibold text-sm hover:bg-money/90 transition-colors"
+                  onClick={() => { addToDebt(79); setAdFree(); onClose(); }}
+                >
+                  📝 Pay with IOU™ — add $79 to your tab
+                </button>
+              </div>
               <button
                 className="w-full text-ink-soft rounded-full py-3 font-sans text-sm hover:text-ink transition-colors"
                 onClick={onClose}

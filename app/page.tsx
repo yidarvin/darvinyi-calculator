@@ -7,6 +7,7 @@ import SurgeBanner from '@/components/chrome/SurgeBanner';
 import CreditBalance from '@/components/chrome/CreditBalance';
 import { AdBanner } from '@/components/chrome/AdBanner';
 import { AdFreeUpsell } from '@/components/overlays/AdFreeUpsell';
+import { RestartButton } from '@/components/chrome/RestartButton';
 import { useStore } from '@/lib/state';
 
 export default function Home() {
@@ -70,6 +71,7 @@ export default function Home() {
                 Calculator 2026
               </h1>
               <CreditBalance />
+              <RestartButton />
             </header>
             <CalcPad />
           </main>

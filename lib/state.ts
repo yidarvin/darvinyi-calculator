@@ -62,6 +62,7 @@ type Actions = {
   setPlan: (p: "pro" | "max" | "enterprise") => void;
   recordCardAttempt: (a: Omit<CardAttempt, "ts">) => void;
   markOnboardingDone: (s: Stage) => void;
+  addToDebt: (amount: number) => void;
   bumpTokens: (n: number) => void;
   setChatMessages: (msgs: ChatMessage[]) => void;
   reset: () => void;
@@ -149,6 +150,17 @@ export const useStore = create<State & Actions>()(
             onboardingDone: { ...s.flags.onboardingDone, [stage]: true },
           },
         })),
+
+      addToDebt: (amount) =>
+        set((s) => {
+          if (s.debt) {
+            const now = Date.now();
+            const elapsed = Math.max(0, now - s.debt.startedAt);
+            const current = s.debt.principal * Math.exp(Math.log(1.2) * elapsed / (7 * 86400 * 1000));
+            return { debt: { principal: current + amount, startedAt: now } };
+          }
+          return { debt: { principal: amount, startedAt: Date.now() } };
+        }),
 
       bumpTokens: (n) =>
         set((s) => ({

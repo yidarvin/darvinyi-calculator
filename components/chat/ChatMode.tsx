@@ -4,6 +4,7 @@ import { useStore, ChatMessage } from "@/lib/state";
 import ChatThread from "./ChatThread";
 import ChatInput from "./ChatInput";
 import Meters from "@/components/chrome/Meters";
+import { RestartButton } from "@/components/chrome/RestartButton";
 import TokensOutModal from "@/components/overlays/TokensOutModal";
 import BeratePopupStub from "@/components/overlays/BeratePopup";
 
@@ -123,6 +124,7 @@ export default function ChatMode() {
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-ink/10 bg-paper/80 backdrop-blur-sm shrink-0">
         <Meters tokens={tokens} waterLiters={waterLiters} />
+        <RestartButton />
 
         {/* Model picker */}
         <div className="relative">
